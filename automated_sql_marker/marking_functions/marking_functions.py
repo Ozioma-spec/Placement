@@ -51,8 +51,11 @@ def compare_all_dataframes(sample_objects, student_objects, digits_only=False):
         qid = answer.question_id
         for j, ans in enumerate(student_objects):
             if ans.task_id == tid and ans.question_id == qid:
-                result = compare_two_dataframes(sample_objects[i].plan_dataframe,
-                                                student_objects[j].plan_dataframe, digits_only=False)
+                result = compare_two_dataframes(
+                    sample_objects[i].plan_dataframe,
+                    student_objects[j].plan_dataframe,
+                    digits_only=False,
+                )
                 results_dict[f"t{tid}q{qid}"] = result
     return results_dict
 
@@ -61,8 +64,8 @@ def compare_sql_statements(s1, s2):
     # Tokenize the statements by splitting them into words
     # Not currently used - just compares if the two SQL statements are identical
     # So could be used to return 100% before any further checking is done to enhance efficiency
-    words1 = re.findall(r'\w+', s1)
-    words2 = re.findall(r'\w+', s2)
+    words1 = re.findall(r"\w+", s1)
+    words2 = re.findall(r"\w+", s2)
 
     # Compute the number of common words between the two statements
     common_words = set(words1) & set(words2)
@@ -78,19 +81,18 @@ def compare_sql_statements(s1, s2):
 
 
 def compare_predicates(pred1, pred2):
-
     if pred1 is None or pred2 is None:
         return None
     else:
         # Split each predicate on the equals sign (=)
-        split1 = pred1.split('=')
-        split2 = pred2.split('=')
+        split1 = pred1.split("=")
+        split2 = pred2.split("=")
 
         # Sort each side of the predicate by table/column name
         split1.sort()
         split2.sort()
 
-    # Compare the sorted predicates
+        # Compare the sorted predicates
         return split1 == split2
 
 
@@ -98,21 +100,32 @@ def compare_tree_level(sample_tree, student_tree, results, level=0, print_detail
     node1 = sample_tree.get_node(sample_tree.root)
     node2 = student_tree.get_node(student_tree.root)
 
-
-    if node1.data['access_predicates'] == node2.data['access_predicates']:
+    if node1.data["access_predicates"] == node2.data["access_predicates"]:
         lev_pred = 0
         fuzz_pred_pr = 100
         fuzz_pred_tsr = 100
 
     else:
-        lev_pred = Levenshtein.distance(node1.data['access_predicates'], node2.data['access_predicates'])
-        fuzz_pred_pr = fuzz.partial_ratio(node1.data['access_predicates'], node2.data['access_predicates'])
-        fuzz_pred_tsr = fuzz.token_sort_ratio(node1.data['access_predicates'], node2.data['access_predicates'])
+        lev_pred = Levenshtein.distance(
+            node1.data["access_predicates"], node2.data["access_predicates"]
+        )
+        fuzz_pred_pr = fuzz.partial_ratio(
+            node1.data["access_predicates"], node2.data["access_predicates"]
+        )
+        fuzz_pred_tsr = fuzz.token_sort_ratio(
+            node1.data["access_predicates"], node2.data["access_predicates"]
+        )
 
-    if node1.data['projection'] != node2.data['projection']:
-        lev_proj = Levenshtein.distance(node1.data['projection'], node2.data['projection'])
-        fuzz_proj_pr = fuzz.partial_ratio(node1.data['access_predicates'], node2.data['access_predicates'])
-        fuzz_proj_tsr = fuzz.token_sort_ratio(node1.data['projection'], node2.data['projection'])
+    if node1.data["projection"] != node2.data["projection"]:
+        lev_proj = Levenshtein.distance(
+            node1.data["projection"], node2.data["projection"]
+        )
+        fuzz_proj_pr = fuzz.partial_ratio(
+            node1.data["access_predicates"], node2.data["access_predicates"]
+        )
+        fuzz_proj_tsr = fuzz.token_sort_ratio(
+            node1.data["projection"], node2.data["projection"]
+        )
     else:
         lev_proj = 0
         fuzz_proj_pr = 100
@@ -120,27 +133,83 @@ def compare_tree_level(sample_tree, student_tree, results, level=0, print_detail
 
     # if we want to print the entire tree
     if print_detail:
-        print("\t" * level, node1.identifier, node2.identifier, "\tlev_Pred:", lev_pred, "\tFz-pr_Pred:", fuzz_pred_pr, "\tFz-tsr_Pred:", fuzz_pred_tsr,
-            "\tlev_Project:", lev_proj, "\tFz-pr_Project:", fuzz_proj_pr, "\tFz-tsr_project", fuzz_proj_tsr)
+        print(
+            "\t" * level,
+            node1.identifier,
+            node2.identifier,
+            "\tlev_Pred:",
+            lev_pred,
+            "\tFz-pr_Pred:",
+            fuzz_pred_pr,
+            "\tFz-tsr_Pred:",
+            fuzz_pred_tsr,
+            "\tlev_Project:",
+            lev_proj,
+            "\tFz-pr_Project:",
+            fuzz_proj_pr,
+            "\tFz-tsr_project",
+            fuzz_proj_tsr,
+        )
 
-    results['Lev_Pred'] += lev_pred
-    results['Fz-pr_Pred'] += fuzz_pred_pr
-    results['Fz-tsr_Pred'] += fuzz_pred_tsr
-    results['Lev_Project'] += lev_proj
-    results['Fz-pr_Project'] += fuzz_proj_pr
-    results['Fz-tsr_project'] += fuzz_proj_tsr
-    results['Tree_levels'] += 1
+    results["Lev_Pred"] += lev_pred
+    results["Fz-pr_Pred"] += fuzz_pred_pr
+    results["Fz-tsr_Pred"] += fuzz_pred_tsr
+    results["Lev_Project"] += lev_proj
+    results["Fz-pr_Project"] += fuzz_proj_pr
+    results["Fz-tsr_project"] += fuzz_proj_tsr
+    results["Tree_levels"] += 1
 
     for c1 in student_tree.children(student_tree.root):
-        compare_tree_level(student_tree.subtree(c1.identifier), sample_tree.subtree(c1.identifier), results, level + 1, print_detail)
+        compare_tree_level(
+            student_tree.subtree(c1.identifier),
+            sample_tree.subtree(c1.identifier),
+            results,
+            level + 1,
+            print_detail,
+        )
+
 
 def compare_trees(sample_tree, student_tree, display_detail=True):
-    results_dict = {'Lev_Pred': 0, 'Fz-pr_Pred': 0, 'Fz-tsr_Pred': 0, 'Lev_Project': 0, 'Fz-pr_Project': 0, 'Fz-tsr_project': 0, 'Tree_levels': 0}
-    compare_tree_level(sample_tree, student_tree, results_dict, print_detail=display_detail)
-    print("Levenshtein average (Predicate):", 100 - results_dict['Lev_Pred']/results_dict['Tree_levels'], "%")
-    print("Fuzzy partial ratio (Predicate):", results_dict['Fz-pr_Pred']/results_dict['Tree_levels'], "%")
-    print("Fuzzy token sort ratio (Predicate", results_dict['Fz-tsr_project']/results_dict['Tree_levels'], '%')
-    print("Levenshtein average (Projection):", 100 - results_dict['Lev_Project']/results_dict['Tree_levels'], '%')
-    print("Fuzzy partial ratio (Projection):", results_dict['Fz-pr_Project']/results_dict['Tree_levels'], '%')
-    print("Fuzzy token sort ratio (Projection):", results_dict['Fz-tsr_project']/results_dict['Tree_levels'], "%")
+    results_dict = {
+        "Lev_Pred": 0,
+        "Fz-pr_Pred": 0,
+        "Fz-tsr_Pred": 0,
+        "Lev_Project": 0,
+        "Fz-pr_Project": 0,
+        "Fz-tsr_project": 0,
+        "Tree_levels": 0,
+    }
+    compare_tree_level(
+        sample_tree, student_tree, results_dict, print_detail=display_detail
+    )
+    print(
+        "Levenshtein average (Predicate):",
+        100 - results_dict["Lev_Pred"] / results_dict["Tree_levels"],
+        "%",
+    )
+    print(
+        "Fuzzy partial ratio (Predicate):",
+        results_dict["Fz-pr_Pred"] / results_dict["Tree_levels"],
+        "%",
+    )
+    print(
+        "Fuzzy token sort ratio (Predicate",
+        results_dict["Fz-tsr_project"] / results_dict["Tree_levels"],
+        "%",
+    )
+    print(
+        "Levenshtein average (Projection):",
+        100 - results_dict["Lev_Project"] / results_dict["Tree_levels"],
+        "%",
+    )
+    print(
+        "Fuzzy partial ratio (Projection):",
+        results_dict["Fz-pr_Project"] / results_dict["Tree_levels"],
+        "%",
+    )
+    print(
+        "Fuzzy token sort ratio (Projection):",
+        results_dict["Fz-tsr_project"] / results_dict["Tree_levels"],
+        "%",
+    )
     # Needs updated to print all results and then maybe average

@@ -20,7 +20,7 @@ def get_id_prefix(file_path):
     # bh27pf, fg35hh etc
     file_path = Path(file_path)
     filename = file_path.name
-    sid_pattern = re.compile(r'^[a-z]{2}[0-9]{2}[a-z]{2}', re.IGNORECASE)
+    sid_pattern = re.compile(r"^[a-z]{2}[0-9]{2}[a-z]{2}", re.IGNORECASE)
     sid_match = sid_pattern.match(filename)
     if sid_match:
         return sid_match.group()
@@ -29,10 +29,10 @@ def get_id_prefix(file_path):
 
 
 def strip_identifier(student_id, file_contents):
-    pattern = re.compile(r'{}_'.format(student_id), re.I)
+    pattern = re.compile(r"{}_".format(student_id), re.I)
     mo = re.search(pattern, file_contents)
     if mo:
-        file_contents = re.sub(mo.group(), '', file_contents)
+        file_contents = re.sub(mo.group(), "", file_contents)
     return file_contents
 
 
@@ -54,7 +54,7 @@ def get_file_contents(file_path):
     except FileNotFoundError:
         print("Error! No such file or directory")
     except PermissionError:
-        if file_path == '':
+        if file_path == "":
             print("Error! Invalid file path supplied")
     except Exception as ex:
         print(ex)
@@ -70,9 +70,9 @@ def extract_comments(sql_file_contents):
     comments = []
     if sql_file_contents:
         for line in sql_file_contents.splitlines():
-            if line.strip().startswith('/*') and line.strip().endswith('*/'):
+            if line.strip().startswith("/*") and line.strip().endswith("*/"):
                 # check there is valid data between the comment delimiters
-                if mid_string(line, '/*', '*/').strip():
+                if mid_string(line, "/*", "*/").strip():
                     # add to comments list
                     comments.append(line)
 
@@ -90,22 +90,26 @@ def get_task_and_question_numbers_to_mark(comments_list):
     task_and_questions = {}
     # split content on newline:
     for comment in comments_list:
-        task_number = ''
+        task_number = ""
         question_numbers = []
         # locate delimited line, if not found dictionary will return none type:
         if "/* <" in comment and "> */" in comment:
             # uses a utility method mid-string  to substring between delimiters('task:' and '-'):
             task_number_string = mid_string(comment, "task:", "-").replace(" ", "")
 
-            questions_number_string = mid_string(comment, "questions:", ">").replace(" ", "")
+            questions_number_string = mid_string(comment, "questions:", ">").replace(
+                " ", ""
+            )
             try:
                 # audit for valid number and not empty string:
                 task_number = validate_number_in_string(task_number_string)
-                if task_number == '':
+                if task_number == "":
                     raise ValueError("No task value provided")
             except ValueError:
-                print("\nError reading marking criteria!\n"
-                      "No task number provided or formatting issue in marking details\n")
+                print(
+                    "\nError reading marking criteria!\n"
+                    "No task number provided or formatting issue in marking details\n"
+                )
                 sys.exit(1)
 
             try:
@@ -118,25 +122,33 @@ def get_task_and_question_numbers_to_mark(comments_list):
                     if question:
                         question_numbers.append(question)
                 # remove duplicate question numbers by converting to a set:
-                question_numbers = (list(set(question_numbers)))
+                question_numbers = list(set(question_numbers))
                 # raise exception if no question numbers found to mark:
                 if not question_numbers:
                     raise ValueError("Invalid question number provided")
             except ValueError:
-                print("\nError reading marking criteria!\n"
-                      "No question numbers provided or formatting issue in marking details of file\n")
+                print(
+                    "\nError reading marking criteria!\n"
+                    "No question numbers provided or formatting issue in marking details of file\n"
+                )
                 sys.exit(1)
-            task_and_questions[task_number] = sorted(question_numbers, key=lambda x: int(x))
+            task_and_questions[task_number] = sorted(
+                question_numbers, key=lambda x: int(x)
+            )
     # Ensure task_and_questions dictionary contains data
     # catches files with no marking criteria provided
     try:
         if task_and_questions:
             return task_and_questions
         else:
-            raise ValueError("No comment lines in file or marking criteria not supplied")
+            raise ValueError(
+                "No comment lines in file or marking criteria not supplied"
+            )
     except ValueError:
-        print("\nError! No valid comment lines in file or\n"
-              "marking criteria not provided!\n")
+        print(
+            "\nError! No valid comment lines in file or\n"
+            "marking criteria not provided!\n"
+        )
         sys.exit(1)
 
 
@@ -156,8 +168,8 @@ def extract_task_question_mark(comments_list, tq_to_mark_dict):
     # Searches the list of comments previously extracted from the file contents
     for comment in comments_list:
         # strip common delimiter/separation characters and spaces for easier patter detection
-        comment = comment.translate(str.maketrans({':': '', '-': '', ' ': ''}))
-        pattern = re.compile(r'task(\d+)question(\d+)\w*\[(\d+)]', re.IGNORECASE)
+        comment = comment.translate(str.maketrans({":": "", "-": "", " ": ""}))
+        pattern = re.compile(r"task(\d+)question(\d+)\w*\[(\d+)]", re.IGNORECASE)
         match = pattern.search(comment)
         # check each comment for pattern match
         # if a match is found in comments, check if it is a task/question that should be marked
@@ -176,7 +188,6 @@ def extract_task_question_mark(comments_list, tq_to_mark_dict):
 def compare_found_marks_comments_expected(found_marks_tuples_list, tq_to_mark_dict):
     tq_without_marks_tuples_list = []
     try:
-
         if found_marks_tuples_list:
             # ensure all questions specified for marking have an accompanying mark defined
             # iterate each task/key in dictionary
@@ -198,9 +209,9 @@ def compare_found_marks_comments_expected(found_marks_tuples_list, tq_to_mark_di
                         # create a list of task/question tuples missing a mark
                         tq_without_marks_tuples_list.append((task, question))
         else:
-            raise ValueError('No marks supplied for questions')
+            raise ValueError("No marks supplied for questions")
     except ValueError:
-        print('Error! No marks supplied for any question you requested marking')
+        print("Error! No marks supplied for any question you requested marking")
 
     return tq_without_marks_tuples_list
 
@@ -214,26 +225,92 @@ def extract_table_aliases(sql_statement):
     """
     # Replace all SQL keywords with commas
     keywords = [
-        'SELECT', 'FROM', 'WHERE', 'JOIN', 'ON', 'AND', 'OR', 'ORDER BY',
-        'GROUP BY', 'HAVING', 'AS', 'IN', 'LIKE', 'NOT', 'NULL', 'IS',
-        'BETWEEN', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'EXISTS', 'ALL',
-        'ANY', 'JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN',
-        'NATURAL JOIN', 'USING', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX',
-        'ROUND', 'CAST', 'AS', 'DISTINCT', 'UNION', 'INTERSECT', 'EXCEPT',
-        'AS', 'ON', 'AS', 'ASC', 'DESC', 'LIMIT', 'OFFSET', 'FETCH', 'FIRST',
-        'NEXT', 'ONLY', 'ROW', 'ROWS', 'OVER', 'PARTITION', 'BY', 'RANK',
-        'DENSE_RANK', 'NTILE', 'LAG', 'LEAD', 'FIRST_VALUE', 'LAST_VALUE',
-        'NTH_VALUE', 'PERCENT_RANK', 'CUME_DIST', 'IGNORE NULLS', 'RESPECT NULLS',
-        'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP', 'LOCALTIME', 'LOCALTIMESTAMP, USING'
+        "SELECT",
+        "FROM",
+        "WHERE",
+        "JOIN",
+        "ON",
+        "AND",
+        "OR",
+        "ORDER BY",
+        "GROUP BY",
+        "HAVING",
+        "AS",
+        "IN",
+        "LIKE",
+        "NOT",
+        "NULL",
+        "IS",
+        "BETWEEN",
+        "CASE",
+        "WHEN",
+        "THEN",
+        "ELSE",
+        "END",
+        "EXISTS",
+        "ALL",
+        "ANY",
+        "JOIN",
+        "INNER JOIN",
+        "LEFT JOIN",
+        "RIGHT JOIN",
+        "FULL JOIN",
+        "NATURAL JOIN",
+        "USING",
+        "COUNT",
+        "SUM",
+        "AVG",
+        "MIN",
+        "MAX",
+        "ROUND",
+        "CAST",
+        "AS",
+        "DISTINCT",
+        "UNION",
+        "INTERSECT",
+        "EXCEPT",
+        "AS",
+        "ON",
+        "AS",
+        "ASC",
+        "DESC",
+        "LIMIT",
+        "OFFSET",
+        "FETCH",
+        "FIRST",
+        "NEXT",
+        "ONLY",
+        "ROW",
+        "ROWS",
+        "OVER",
+        "PARTITION",
+        "BY",
+        "RANK",
+        "DENSE_RANK",
+        "NTILE",
+        "LAG",
+        "LEAD",
+        "FIRST_VALUE",
+        "LAST_VALUE",
+        "NTH_VALUE",
+        "PERCENT_RANK",
+        "CUME_DIST",
+        "IGNORE NULLS",
+        "RESPECT NULLS",
+        "CURRENT_DATE",
+        "CURRENT_TIME",
+        "CURRENT_TIMESTAMP",
+        "LOCALTIME",
+        "LOCALTIMESTAMP, USING",
     ]
 
     for keyword in keywords:
-        sql_statement = re.sub(rf'(?i)\b{keyword}\b', ',', sql_statement, re.IGNORECASE)
+        sql_statement = re.sub(rf"(?i)\b{keyword}\b", ",", sql_statement, re.IGNORECASE)
     sql_statement = sql_statement.strip()
     # Extract table names and aliases using regular expressions
     table_aliases = {}
-    for s in sql_statement.split(','):
-        pattern = re.compile(r'\s*([a-zA-Z_]\w*)\s+([a-zA-Z_]\w*)\s*')
+    for s in sql_statement.split(","):
+        pattern = re.compile(r"\s*([a-zA-Z_]\w*)\s+([a-zA-Z_]\w*)\s*")
         match = re.search(pattern, s)
         if match:
             table_aliases[match.group(2)] = match.group(1)
@@ -244,12 +321,12 @@ def normalise_table_aliases(sql_statement):
     table_aliases = extract_table_aliases(sql_statement)
     # Replace table aliases with table names in columns
     for table_alias, table_name in table_aliases.items():
-        pattern = re.compile(rf'\b{table_alias}\.(\w+)\b')
-        sql_statement = re.sub(pattern, rf'{table_name}.\1', sql_statement)
+        pattern = re.compile(rf"\b{table_alias}\.(\w+)\b")
+        sql_statement = re.sub(pattern, rf"{table_name}.\1", sql_statement)
 
     # Remove table aliases from table names
     for table_alias, table_name in table_aliases.items():
-        pattern = re.compile(rf'\b{table_name}\s+{table_alias}\b')
+        pattern = re.compile(rf"\b{table_name}\s+{table_alias}\b")
         sql_statement = re.sub(pattern, table_name, sql_statement)
 
     return sql_statement
@@ -276,15 +353,16 @@ def extract_statements(sql_file_contents, tqm_tuples_list):
         found_task = False
         for i, line in enumerate(lines):
             # sanitize each line, to make the comment line uniform for comparison
-            sanitized_line = line.lower().translate(str.maketrans({':': '', '-': '', ' ': ''}))
+            sanitized_line = line.lower().translate(
+                str.maketrans({":": "", "-": "", " ": ""})
+            )
 
             # if line contains both task(n) and question(n) flag as found
             # once comment line found, capture the lines that follow (building the sql statement).
             if task_n in sanitized_line and question_n in sanitized_line:
                 found_task = True
             elif found_task:  # when comment line matches task and question
-
-                if line.startswith('/*'):
+                if line.startswith("/*"):
                     break
                     # add line to current collection of lines
                 else:
@@ -293,17 +371,21 @@ def extract_statements(sql_file_contents, tqm_tuples_list):
                     # end of statement found.
 
         # join and clean extracted lines to create single statement
-        sql_statement = ' '.join(sql_statement_lines).strip(';')
+        sql_statement = " ".join(sql_statement_lines).strip(";")
         sql_statement = re.sub(r"[ \t]+", " ", sql_statement).strip()
 
         # normalise select statement table aliases
-        if sql_statement.lower().startswith('select'):
+        if sql_statement.lower().startswith("select"):
             sql_statement = normalise_table_aliases(sql_statement)
 
-            found_statements.append((task_number, question_number, mark_available, sql_statement))
+            found_statements.append(
+                (task_number, question_number, mark_available, sql_statement)
+            )
         # filter for select statements or return all
-        elif sql_statement != '':
-            found_statements.append((task_number, question_number, mark_available, sql_statement))
+        elif sql_statement != "":
+            found_statements.append(
+                (task_number, question_number, mark_available, sql_statement)
+            )
             # found_statements.append(sql_statement)
     return found_statements
 
@@ -312,7 +394,7 @@ def get_explain_plan(cursor, statement_id, query):
     # list to hold explain plan(rows) for each statement/query
     plan = []
     # set statement ID for reference in explain table
-    query_id = f"\'{statement_id}\'"
+    query_id = f"'{statement_id}'"
 
     # prepare statement to remove any previous reference from the explain plan table which would collide with the
     # current statement ID
@@ -329,7 +411,7 @@ def get_explain_plan(cursor, statement_id, query):
         cursor.execute(explain_query)
 
         # Prepare query statement to retrieve explain plan
-        plan_table_query = f'SELECT operation, object_name, object_type, id, parent_id, depth, position, access_predicates, projection FROM plan_table WHERE statement_id = {query_id}'
+        plan_table_query = f"SELECT operation, object_name, object_type, id, parent_id, depth, position, access_predicates, projection FROM plan_table WHERE statement_id = {query_id}"
         # Execute the retrieval of the explain plan from the plan table
         returned_plan = cursor.execute(plan_table_query)
 
@@ -338,25 +420,31 @@ def get_explain_plan(cursor, statement_id, query):
             plan.append(row)
 
     except oracledb.DatabaseError as exc:
-        error, = exc.args
+        (error,) = exc.args
         print("Oracle-Error-Code:", error.code)
         print("Oracle-Error-Message:", error.message)
     else:
         return plan
 
 
-def find_missing_tasks_and_questions(sample_list: List[Answer], test_list: List[Answer]) -> List[Tuple[str, str]]:
+def find_missing_tasks_and_questions(
+    sample_list: List[Answer], test_list: List[Answer]
+) -> List[Tuple[str, str]]:
     missing_tasks_and_questions = []
     for sample_ans in sample_list:
         found = False
         for student_ans in test_list:
-            if sample_ans.task_id == student_ans.task_id and sample_ans.question_id == student_ans.question_id:
+            if (
+                sample_ans.task_id == student_ans.task_id
+                and sample_ans.question_id == student_ans.question_id
+            ):
                 found = True
                 break
         if not found:
-            missing_tasks_and_questions.append((sample_ans.task_id, sample_ans.question_id))
+            missing_tasks_and_questions.append(
+                (sample_ans.task_id, sample_ans.question_id)
+            )
     return missing_tasks_and_questions
-
 
 
 # if __name__ == '__main__':

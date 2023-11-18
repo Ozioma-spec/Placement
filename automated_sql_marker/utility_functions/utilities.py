@@ -14,6 +14,7 @@ Notes: A personal library of utilities that is continuously being developed and 
 
 # imports
 
+
 def validate_number_in_string(test_str):
     """
     Improved testing for auditing for a numeric within a string
@@ -24,12 +25,11 @@ def validate_number_in_string(test_str):
     """
     number = []
     for i in test_str:
-
-        if i.isdigit() and i != '':
+        if i.isdigit() and i != "":
             number.append(i)
         else:
             continue
-    return ''.join(number)
+    return "".join(number)
 
 
 def right_string(input_string: str, front_delim: str):
@@ -42,7 +42,7 @@ def right_string(input_string: str, front_delim: str):
     :return: substring to the right of delimiter if found or empty string if not found
     """
     if not isinstance(input_string, str) or not isinstance(front_delim, str):
-        return ''
+        return ""
 
     # Find the index of the delimiter in the input string
     # Returns -1 if not found
@@ -56,7 +56,7 @@ def right_string(input_string: str, front_delim: str):
         return input_string[substring_start:]
     else:
         # no delimiter found return empty string
-        return ''
+        return ""
 
 
 def mid_string(input_string, front_delim, back_delim):
@@ -75,13 +75,15 @@ def mid_string(input_string, front_delim, back_delim):
     front_delim_index = input_string.find(front_delim)
     if front_delim_index == -1 or not front_delim:
         # front delimiter not found or an empty string was passed
-        return ''
+        return ""
 
     # find the index of the back delimiter in the input string
-    back_delim_index = input_string.find(back_delim, front_delim_index + len(front_delim))
+    back_delim_index = input_string.find(
+        back_delim, front_delim_index + len(front_delim)
+    )
     if back_delim_index == -1 or not back_delim:
         # back delimiter not found or an empty string was passed
-        return ''
+        return ""
 
     # extract the substring between the two delimiters
-    return input_string[front_delim_index + len(front_delim):back_delim_index]
+    return input_string[front_delim_index + len(front_delim) : back_delim_index]
